@@ -29,7 +29,9 @@ module Rack
     private
 
       def getaddr
-        (IPSocket.getaddress(Socket.gethostname).to_s || "") + ':' + ENV['PORT']
+        puts "SOCKET: #{IPSocket.getaddress(Socket.gethostname).to_s}"
+        puts "PORT: #{ENV['PORT']}"
+        (IPSocket.getaddress(Socket.gethostname).to_s || "") + ':' + (ENV['PORT'] || "")
       rescue SocketError
         nil
       end
