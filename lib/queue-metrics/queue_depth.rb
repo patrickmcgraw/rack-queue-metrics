@@ -17,11 +17,12 @@ module Rack
           @logger.formatter = L2MetFormatter.new
         end
 
-        Thread.new {report(1)}
       end
 
       def call(env)
         return @app.call(env) unless ENV['PORT']
+
+        report
         status, headers, body = @app.call(env)
         [status, headers, body]
       end
@@ -29,23 +30,18 @@ module Rack
     private
 
       def getaddr
-        puts "SOCKET: #{IPSocket.getaddress(Socket.gethostname).to_s}"
-        puts "PORT: #{ENV['PORT']}"
         (IPSocket.getaddress(Socket.gethostname).to_s || "") + ':' + (ENV['PORT'] || "")
       rescue SocketError
         nil
       end
 
-      def report(interval)
-        loop do
-          stats = raindrops_stats
-          stats[:addr] = @addr
-          notify(stats) if should_notify?
-          @logger.info(["measure=#{@instrument_name}",
-                        "addr=#{@addr}",
-                        "queue_depth=#{stats[:requests][:queued]}"].join(' '))
-          sleep(interval)
-        end
+      def report
+        stats = raindrops_stats
+        stats[:addr] = @addr
+        notify(stats) if should_notify?
+        @logger.info(["measure=#{@instrument_name}",
+                      "addr=#{@addr}",
+                      "queue_depth=#{stats[:requests][:queued]}"].join(' '))
       end
 
       def raindrops_stats
